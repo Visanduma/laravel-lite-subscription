@@ -10,7 +10,7 @@ class PlanSubscription extends Model
 {
     protected $table = "lite_plan_subscriptions";
     protected $guarded = [];
-    protected $dates = ['end_at', 'start_at'];
+    protected $dates = ['end_at', 'start_at', 'trial_ends_at', 'canceled_at', 'unsubscribed_at'];
 
     public function plan()
     {
@@ -33,13 +33,20 @@ class PlanSubscription extends Model
 
         if ($feature) {
             $feature = $this->plan->getFeature($slug);
+            $validity = now()->add($feature->valid_interval, $feature->valid_period);
             $uses = $this->usage()->firstOrCreate([
                 'plan_feature_id' => $feature->id
             ], [
                 'usage' => 0,
                 'slug' => $slug,
-                'valid_till' => now()->add($feature->valid_interval, $feature->valid_period)
+                'valid_till' => $validity
             ]);
+
+            // reset feature if expired
+            if ($uses->expired) {
+                $uses->resetUsage();
+                $uses->renewValidity();
+            }
 
             // TODO check usable balance before update
             $uses->increment('usage', $amount);
@@ -82,6 +89,20 @@ class PlanSubscription extends Model
     {
         $this->canceled_at = now();
         $this->save();
+    }
+
+    public function onTrial(): bool
+    {
+        if ($this->trial_ends_at && !$this->trial_ends_at->isPast()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function isFree(): bool
+    {
+        return $this->plan->price == 0;
     }
 
 

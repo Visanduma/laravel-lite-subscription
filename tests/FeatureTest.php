@@ -59,8 +59,9 @@ class FeatureTest extends TestCase
         $subs = $user->subscription();
         $subs->useFeature('test-feature', 15);
         $subs->useFeature('test-feature', 5);
+        $subs->useFeature('test-feature', -3);
 
-        $this->assertEquals(20, $subs->featureUsage('test-feature'));
+        $this->assertEquals(17, $subs->featureUsage('test-feature'));
         $this->assertTrue($subs->canUseFeature('test-feature'));
 
         $subs->useFeature('test-feature', 95);
@@ -68,6 +69,12 @@ class FeatureTest extends TestCase
 
         $this->assertTrue($user->hasSubscribed($plan));
         $this->assertTrue($user->hasAnySubscription());
+
+        $this->assertTrue($subs->onTrial());
+        $this->travel(35)->days();
+        $this->assertFalse($subs->onTrial());
+        $this->assertFalse($subs->isFree());
+
 
     }
 
@@ -84,6 +91,24 @@ class FeatureTest extends TestCase
 
         $this->assertNull($user->subscription('main'));
         $this->assertFalse($user->hasAnySubscription());
+
+    }
+
+
+    public function test_check_feature_validity()
+    {
+        $plan = $this->createPlanWithFeature();
+        $user = new Subscriber();
+        $user->subscribe($plan);
+        $subs = $user->subscription();
+
+        $subs->useFeature('test-feature', 15);
+        $this->assertEquals(15, $subs->featureUsage('test-feature'));
+
+        $this->travel(35)->days();
+
+        $subs->useFeature('test-feature', 15);
+        $this->assertEquals(15, $subs->featureUsage('test-feature'));
 
 
     }

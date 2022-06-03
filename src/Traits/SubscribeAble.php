@@ -16,7 +16,8 @@ trait SubscribeAble
             'plan_id' => $plan->id,
             'slug' => 'main',
             'start_at' => now(),
-            'end_at' => now()->add($plan->valid_interval, $plan->valid_period)
+            'end_at' => now()->add($plan->valid_interval, $plan->valid_period),
+            'trial_ends_at' => $plan->trial_days ? now()->addDays($plan->trial_days) : null
         ]);
     }
 
@@ -33,7 +34,9 @@ trait SubscribeAble
 
     public function subscription($slug = 'main'): ?PlanSubscription
     {
-        return $this->subscriptions()->where('slug', $slug)->first();
+        return $this->subscriptions()
+            ->where('slug', $slug)
+            ->first();
     }
 
     public function hasAnySubscription(): bool
@@ -41,9 +44,4 @@ trait SubscribeAble
         return $this->subscriptions()->exists();
     }
 
-    // hasSubscribedToAny()
-    // useFeature($amount)
-    // unUseFeature($amount)
-    // onTrial
-    // isFree
 }

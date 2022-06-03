@@ -40,7 +40,9 @@ class TestCase extends Orchestra
     {
         $plan = Plan::factory()->create([
             'valid_period' => 1,
-            'valid_interval' => 'year'
+            'valid_interval' => 'year',
+            'trial_days' => 30,
+            'price' => 450
         ]);
         $feature = Feature::factory()->create([
             'slug' => 'test-feature'
@@ -48,7 +50,7 @@ class TestCase extends Orchestra
 
         $plan->attachFeature($feature, [
             'limit' => 100,
-            'valid_period' => 3,
+            'valid_period' => 1,
             'valid_interval' => 'month'
         ]);
 
