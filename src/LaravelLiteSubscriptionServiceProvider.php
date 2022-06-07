@@ -19,7 +19,7 @@ class LaravelLiteSubscriptionServiceProvider extends PackageServiceProvider
             ->name('laravel-lite-subscription')
             ->hasConfigFile()
             ->hasViews()
-            ->hasMigration('create_laravel-lite-subscription_table')
+            ->hasMigration('create_lite_subscription_table')
             ->hasCommand(LaravelLiteSubscriptionCommand::class);
     }
 }

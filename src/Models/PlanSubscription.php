@@ -12,6 +12,12 @@ class PlanSubscription extends Model
     protected $guarded = [];
     protected $dates = ['end_at', 'start_at', 'trial_ends_at', 'canceled_at', 'unsubscribed_at'];
 
+    public function scopeActive($q)
+    {
+        return $q->whereDate('end_at','>=',now())->whereNull('canceled_at');
+    }
+
+
     public function plan()
     {
         return $this->belongsTo(Plan::class);
@@ -31,7 +37,7 @@ class PlanSubscription extends Model
     {
         $feature = $this->plan->hasFeature($slug);
 
-        if ($feature) {
+        if ($feature && $this->canUseFeature($slug)) {
             $feature = $this->plan->getFeature($slug);
             $validity = now()->add($feature->valid_interval, $feature->valid_period);
             $uses = $this->usage()->firstOrCreate([
@@ -74,6 +80,16 @@ class PlanSubscription extends Model
         return 0;
     }
 
+    public function hasFeature($slug): bool
+    {
+        return $this->plan->hasFeature($slug);
+    }
+
+    public function getFeature($slug)
+    {
+        return $this->plan->getFeature($slug);
+    }
+
     public function featureUsage($slug): int
     {
         return $this->usage()->whereSlug($slug)->first()->usage ?? 0;
@@ -82,6 +98,12 @@ class PlanSubscription extends Model
     public function unsubscribe()
     {
         $this->unsubscribed_at = now();
+        $this->save();
+    }
+
+    public function resubscribe()
+    {
+        $this->unsubscribed_at = null;
         $this->save();
     }
 
@@ -104,6 +126,4 @@ class PlanSubscription extends Model
     {
         return $this->plan->price == 0;
     }
-
-
 }

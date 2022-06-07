@@ -10,11 +10,11 @@ use Visanduma\LaravelLiteSubscription\Models\PlanSubscription;
 
 trait SubscribeAble
 {
-    public function subscribe(Plan $plan)
+    public function subscribe(Plan $plan, $slug = 'main')
     {
         $this->subscriptions()->create([
             'plan_id' => $plan->id,
-            'slug' => 'main',
+            'slug' => $slug,
             'start_at' => now(),
             'end_at' => now()->add($plan->valid_interval, $plan->valid_period),
             'trial_ends_at' => $plan->trial_days ? now()->addDays($plan->trial_days) : null
@@ -42,6 +42,12 @@ trait SubscribeAble
     public function hasAnySubscription(): bool
     {
         return $this->subscriptions()->exists();
+    }
+
+    public function hasAnyActiveSubscription(): bool
+    {
+        // TODO fix this query
+        return $this->subscriptions()->active()->exists();
     }
 
 }
